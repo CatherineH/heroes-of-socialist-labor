@@ -1,0 +1,140 @@
+html, body {
+    width: 100%;
+    height: 100%;
+    margin:0;
+    padding:0;
+    overflow: hidden;
+}
+
+#instructions {
+    position: absolute;
+
+    width: 100%;
+    height: 100%;
+
+    background-color: rgba(0,0,0,0.);
+
+    width: 100%;
+    height: 100%;
+
+    display: -webkit-box;
+    display: -moz-box;
+    display: box;
+/*
+    -webkit-box-orient: horizontal;
+    -moz-box-orient: horizontal;
+    box-orient: horizontal;
+
+
+    -webkit-box-pack: center;
+    -moz-box-pack: center;
+    box-pack: center;
+*/
+    -webkit-box-align: center;
+    -moz-box-align: center;
+    box-align: center;
+
+    color: #ffffff;
+    text-align: center;
+
+    cursor: pointer;
+
+}
+
+#score {
+        position: absolute;
+
+    width: 100%;
+    height: 100%;
+
+    background-color: rgba(0,0,0,0.);
+
+    width: 100%;
+    height: 100%;
+
+    display: -webkit-box;
+    display: -moz-box;
+    display: box;
+
+    -webkit-box-orient: horizontal;
+    -moz-box-orient: horizontal;
+    box-orient: horizontal;
+/*
+    -webkit-box-pack: center;
+    -moz-box-pack: center;
+    box-pack: center;
+*/
+    -webkit-box-align: left;
+    -moz-box-align: left;
+    box-align: left;
+
+    color: #ffffff;
+    text-align: left;
+
+    cursor: pointer;
+}
+
+#timer {
+    position: absolute;
+
+    width: 100%;
+    height: 100%;
+
+    background-color: rgba(0,0,0,0.);
+
+    width: 100%;
+    height: 100%;
+
+    display: -webkit-box;
+    display: -moz-box;
+    display: box;
+
+    left: 50%;
+/*
+    -webkit-box-orient: horizontal;
+    -moz-box-orient: horizontal;
+    box-orient: horizontal;
+
+*/
+    -webkit-box-pack: right;
+    -moz-box-pack: right;
+    box-pack: center;
+
+    color: #ffffff;
+    text-align: right;
+
+    cursor: pointer;
+
+}
+#wins {
+    position: absolute;
+
+    width: 100%;
+    height: 100%;
+
+    background-color: rgba(0,0,0,0.);
+
+    width: 100%;
+    height: 100%;
+
+    display: -webkit-box;
+    display: -moz-box;
+    display: box;
+
+    left: 50%;
+/*
+    -webkit-box-orient: horizontal;
+    -moz-box-orient: horizontal;
+    box-orient: horizontal;
+
+*/
+    -webkit-box-pack: right;
+    -moz-box-pack: right;
+    box-pack: center;
+
+    color: #ffffff;
+    text-align: right;
+
+    cursor: pointer;
+
+}
