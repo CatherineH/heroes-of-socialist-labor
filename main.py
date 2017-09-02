@@ -7,8 +7,11 @@ without the express permission of GradientOne Inc.
 """
 
 # external imports
+from json import dumps
+
 import jinja2
 import os
+from google.appengine.ext import db
 
 import logging
 import webapp2
@@ -22,6 +25,12 @@ decorator = OAuth2DecoratorFromClientSecrets(
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir))
+
+
+class ScoreboardModel(db.Model):
+    """For datastore kinds with fixed schemas"""
+    name = db.StringProperty()
+    num_boxes = db.IntegerProperty()
 
 
 def is_chrome_request(request):
@@ -67,7 +76,7 @@ class PageHandler(webapp2.RequestHandler):
     """Serves the instruments page"""
     #@require_chrome
     def get(self):
-        self.write_html_file('game.html')
+        self.write_html_file(self.page)
 
     def write_html_file(self, filename, add_profile=True, inject_header=True):
         folder = os.path.dirname(os.path.realpath(__file__))
@@ -95,7 +104,50 @@ class PageHandler(webapp2.RequestHandler):
         '''
         self.response.out.write(html)
 
+
+class IntroPage(PageHandler):
+    page = "intro.html"
+
+
+class GamePage(PageHandler):
+    page = "game.html"
+
+
+class ScoreboardPage(PageHandler):
+    page = "scoreboard.html"
+
+
+
+class Scoreboard(webapp2.RequestHandler):
+    def post(self):
+        logging.info(self.request)
+        name = self.request.get("name")
+        num_boxes = self.request.get("num_boxes")
+        num_boxes = int(num_boxes)
+        sbm = ScoreboardModel(key_name=name, name=name, num_boxes=num_boxes)
+        sbm.put()
+
+    def get(self):
+        name = self.request.get("name")
+        if name:
+            key = db.Key.from_path("ScoreboardModel", name)
+            mdo = db.get(key)
+            self.response.write(dumps({"name": mdo.name, "num_boxes": mdo.num_boxes}))
+        else:
+            values = ScoreboardModel.all()
+            count = values.count(limit=1000)
+            if count == 0:
+                self.response.write("[]")
+            else:
+                values = values.fetch(limit=1000)
+                values = [{"name": v.name, "num_boxes": v.num_boxes} for v in values]
+                self.response.write(dumps(values))
+
+
 app = webapp2.WSGIApplication([
     #(decorator.callback_path, decorator.callback_handler()),
-    ('/', PageHandler),
+    ('/', IntroPage),
+    ('/game', GamePage),
+    ('/scoreboard/data', Scoreboard),
+    ('/scoreboard', ScoreboardPage),
 ], debug=False)  # change to True to get responses w/out error.html

@@ -1,0 +1,38 @@
+<html><head><title>Heroes of Socialist Labor</title>
+    <link href="/static/css/style.css" rel="stylesheet" type="text/css">
+    <script src="/static/js/common.js"></script>
+    <script src="/static/js/intro.js"></script>
+</head>
+<body>
+<div id="intro_content" class="main_content">
+    <div id="name_content">
+        <h4>Tell me your name</h4> <input type="text" id="name" onchange="checkFields('name')"/>
+    </div>
+    <div id="occupation_content">
+        <h4>Tell me what you want to be</h4> <input type="text" id="occupation" onchange="checkFields('occupation')">
+    </div>
+</div>
+<script>
+    var name_content = document.getElementById('name_content')
+    var occupation_content = document.getElementById('occupation_content')
+    console.log(getName(), getOccupation(), getCookie("shown_intro"))
+
+    if(getName() && getOccupation() && getCookie("shown_intro")){
+        console.log("got everything")
+        toNextScreen()
+    }
+    else if(getName() && getOccupation()) {
+        showIntro()
+    }
+    else if(getName()){
+        name_content.style.display = 'none'
+        occupation_content.style.display = "block"
+    }
+    else {
+        console.log("hiding occupation")
+        name_content.style.display = 'block'
+        occupation_content.style.display = "none"
+    }
+
+</script>
+</body></html>

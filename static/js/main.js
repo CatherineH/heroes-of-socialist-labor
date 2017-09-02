@@ -17,13 +17,7 @@ var container, camera, scene, renderer, projector;
 
 // +x is into the screen, +y is up/down, +z is left
 
-function max(input) {
-    return Math.max( ...input )
-}
 
-function min(input) {
-    return Math.min( ...input )
-}
 
 // To be synced
 var meshes=[], bodies=[], cigarettes = [];
@@ -49,7 +43,7 @@ init();
 animate();
 
 function init() {
-
+    console.log(getName())
     projector = new THREE.Projector();
 
     container = document.createElement( 'div' );
@@ -158,6 +152,7 @@ function gen_cig_meshes(){
             cubeMesh = new THREE.Mesh(cubeGeo, cubeMaterial);
             cubeMesh.castShadow = true;
             cubeMesh.position.copy(cigs.bodies[i].position)
+            cubeMesh.name = "cig"+i
             cigs.meshes.push(cubeMesh);
             scene.add(cubeMesh);
         } else {
@@ -295,11 +290,12 @@ function getRayCasterFromScreenCoord (screenX, screenY, camera, projector) {
 }
 
 function resetCigs(){
-    for(var i=0; i<cigs.meshes; i++) {
-        scene.remove(cigs.meshes[i])
+    for(var i=0; i<cigs.meshes.length; i++) {
+        var selectedObject = scene.getObjectByName(cigs.meshes[i].name);
+        scene.remove(selectedObject)
     }
-    for(var i=0; i<cigs.bodies; i++) {
-        world.removeBody(cigs.bodies[i])
+    for(var i=0; i<cigs.bodies.length; i++) {
+        world.remove(cigs.bodies[i])
     }
     cigs.meshes = []
     cigs.bodies = []
@@ -315,25 +311,33 @@ function onWindowResize() {
     renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
-var timer = 0
+var day_length = 1000*10
+var timer = Date.now()+day_length
 function animate() {
-    win_box.innerHTML = ""
-    for(var i=0;i<wins.length;i++){
-        win_box.innerHTML = '<span style="font-size:10px;font-color:green">win at: '+wins[i]+'</span>'
-    }
-
     requestAnimationFrame( animate );
-
     updatePhysics();
     if(checkForWin()) {
         resetCigs()
+        win_box.innerHTML = '<span style="font-size:20px;font-color:green">boxes complete: '+wins.length+'</span><br>'
     }
+    var time_left = 60.0*60.0*8.0*(timer-Date.now())/day_length
 
-    if(started){
-        timer_box.innerHTML = '<span style="font-size:40px">'+timer+'</span>'
-        timer += 1
+    if(started && time_left >= 0){
+        var seconds = sprintf("%02d", time_left % 60)
+        var minutes = sprintf("%02d", Math.floor(time_left/60) % 60)
+        var hours = sprintf("%02d", Math.floor(time_left/3600))
+        timer_box.innerHTML = '<span style="font-size:40px">Day left: '+hours+":"+minutes+":"+seconds+'</span>'
+    }
+    else if(started) {
+        var name = getName()
+            $.post(url=window.origin+"/scoreboard/data", data={name:name, "blo": "hello", num_boxes: ""+wins.length}, success=getScoreboard())
+        timer = Date.now()+day_length
     }
     render();
+}
+
+function getScoreboard() {
+    window.location = window.origin+"/scoreboard"
 }
 
 function updatePhysics(){
@@ -368,7 +372,7 @@ function checkForWin() {
         }
     }
 
-    score_box.innerHTML = '<span style="font-size:40px">'+in_count+'</span>'
+    score_box.innerHTML = '<span style="font-size:40px">Cigarettes in box: '+in_count+'</span>'
     if(in_count >= win_condition){
         wins.push(timer)
         return true
