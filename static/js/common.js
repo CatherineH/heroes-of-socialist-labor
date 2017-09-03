@@ -29,3 +29,7 @@ function getName(){
 function getOccupation(){
     return getCookie("occupation")
 }
+
+function resetScreen() {
+    window.location = window.origin
+}

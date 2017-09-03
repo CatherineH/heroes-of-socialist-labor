@@ -24,13 +24,11 @@ function showIntro(){
         factory, where you will work for the rest of our life. The work is dull and you \
         despair. You cannot afford the airfare to Austria in order to defect. Your only \
         hope for a new job is to be so good at it that you become a <i>Hero of Labor</i>. \
-        <input type='submit' value='Start Game' onclick='toNextScreen()'>"
+        <input type='submit' class='button' value='Start Game' onclick='toNextScreen()'>"
 
 }
 
-function resetScreen() {
-    window.location = window.origin
-}
+
 
 function toNextScreen() {
     window.location = window.origin+"/game"

@@ -8,16 +8,16 @@ var controls,time = Date.now();
 
 var jointBody, constrainedBody, mouseConstraint;
 
-var N = 20;
+var cigNums = 20;
+var cigBoxNums = 4;
 
 var score_box = document.getElementById('score');
 var timer_box = document.getElementById('timer');
+var instruction_box = document.getElementById('instructions')
 var win_box = document.getElementById('wins');
 var container, camera, scene, renderer, projector;
 
 // +x is into the screen, +y is up/down, +z is left
-
-
 
 // To be synced
 var meshes=[], bodies=[], cigarettes = [];
@@ -27,16 +27,26 @@ class Cigarettes {
         constructor(){
             this.bodies = []
             this.meshes = []
+            this.name = "cigarettes"
+        }
+    };
+
+class CigaretteBoxes {
+    constructor(){
+            this.bodies = []
+            this.meshes = []
+            this.name = "cigarette_boxes"
         }
     };
 
 var limits = []
 var cigs = new Cigarettes()
+var cigBoxes = new CigaretteBoxes()
+var allObjects = [cigs, cigBoxes]
 var win_condition = 1
 
 var cig_shape = new CANNON.Vec3(0.05, 0.05, 0.7)
-// Initialize Three.js
-if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+
 
 initCannon();
 init();
@@ -110,21 +120,10 @@ function init() {
     limits = [[cig_box.position.x-cig_box_geometry.parameters.width/2.0, cig_box.position.x+cig_box_geometry.parameters.width/2.0],
               [cig_box.position.y, cig_box.position.y+cig_box_geometry.parameters.depth],
               [cig_box.position.z-cig_box_geometry.parameters.height/2.0, cig_box.position.z+cig_box_geometry.parameters.height/2.0]]
-    var edge1 = new THREE.Mesh( cig_box_edge, material3 );
-    var edge2 = new THREE.Mesh( cig_box_edge, material3 );
-    var edge3 = new THREE.Mesh( cig_box_edge, material3 );
-    var edge4 = new THREE.Mesh( cig_box_edge, material3 );
-    edge1.position.set(limits[0][0], limits[1][1], limits[2][0])
-    edge2.position.set(limits[0][1], limits[1][1], limits[2][0])
-    edge3.position.set(limits[0][0], limits[1][1], limits[2][1])
-    edge4.position.set(limits[0][1], limits[1][1], limits[2][1])
-    scene.add(edge1)
-    scene.add(edge2)
-    scene.add(edge3)
-    scene.add(edge4)
-    // cubes
-    gen_cig_meshes()
 
+
+    gen_cig_meshes()
+    gen_cig_box_meshes()
     renderer = new THREE.WebGLRenderer( { antialias: true } );
     renderer.setSize( window.innerWidth, window.innerHeight );
     renderer.setClearColor( scene.fog.color );
@@ -143,39 +142,54 @@ function init() {
 }
 
 function gen_cig_meshes(){
-    var cubeGeo = new THREE.BoxGeometry( cig_shape.x, cig_shape.y, cig_shape.z, 10, 10 );
-    var cigarette = new THREE.CylinderGeometry(1, 1, 2, 32); //cigs have 5 mm radius and 70 mm length
-    var cubeMaterial = new THREE.MeshPhongMaterial( { color: 0x888888 } );
-    var cube = true
+    var cigarette = new THREE.CylinderGeometry(cig_shape.x, cig_shape.x, cig_shape.z, 32); //cigs have 5 mm radius and 70 mm length
+    var cigMaterial = new THREE.MeshPhongMaterial( { color: 0xaaaaaaaa } );
     for(var i=0; i !== cigs.bodies.length; i++){
-        if(cube) {
-            cubeMesh = new THREE.Mesh(cubeGeo, cubeMaterial);
-            cubeMesh.castShadow = true;
-            cubeMesh.position.copy(cigs.bodies[i].position)
-            cubeMesh.name = "cig"+i
-            cigs.meshes.push(cubeMesh);
-            scene.add(cubeMesh);
-        } else {
-            cigarette = new THREE.Mesh(cigarette, cubeMaterial)
-            cigarette.castShadow = true
-            meshes.push(cigarette)
-            scene.add(cigarette)
-        }
+        cigMesh = new THREE.Mesh(cigarette, cigMaterial);
+        cigMesh.castShadow = true;
+        cigMesh.position.copy(cigs.bodies[i].position)
+        cigMesh.name = "cig"+i
+        cigs.meshes.push(cigMesh);
+        scene.add(cigMesh);
     }
 }
 
-function gen_cig_boxes() {
+function gen_cig_box_meshes(){
+    var cigBoxMaterial = new THREE.MeshLambertMaterial( { color: 0xff0000 } );
+    //var cigBoxMaterial = new THREE.MeshLambertMaterial( { color: 0xffff00ff } );
+    for(var i=0; i !== cigBoxes.bodies.length; i++){
+        cigBoxMesh = new THREE.Mesh(cigBoxGeometry, cigBoxMaterial);
+        cigBoxMesh.castShadow = true;
+        cigBoxMesh.position.copy(cigBoxes.bodies[i].position)
+        cigBoxMesh.name = "cigBox"+i
+        cigBoxes.meshes.push(cigBoxMesh);
+        scene.add(cigBoxMesh);
+    }
+}
+
+function gen_cig_bodies() {
     var mass = 5;
-    boxShape = new CANNON.Box(cig_shape);
+    boxShape = new CANNON.Cylinder(cig_shape.x, cig_shape.x, cig_shape.z, 32);
     // the bodies get added first
-    for(var i=0; i < N; i++){
+    for(var i=0; i < cigNums; i++){
         boxBody = new CANNON.Body({ mass: mass });
         boxBody.addShape(boxShape);
-        boxBody.position.set(0.1*N, 0.1*N, 0);
+        boxBody.position.set(0.1*i, 0.1*i, 0);
         world.addBody(boxBody);
         cigs.bodies.push(boxBody);
     }
 }
+
+function gen_cig_box_bodies() {
+    var mass = 5;
+    // the bodies get added first
+    for(var i=0; i < cigBoxNums; i++){
+        cig_boxBody.position.set(1.0, 1.0, 1.0*i);
+        world.addBody(cig_boxBody);
+        cigBoxes.bodies.push(cig_boxBody);
+    }
+}
+
 
 function setClickMarker(x,y,z) {
     if(!clickMarker){
@@ -202,11 +216,25 @@ function onMouseMove(e){
     }
 }
 
-function onMouseDown(e){
-    // Find mesh from a ray
-    var entity = findNearestIntersectingObject(e.clientX,e.clientY,camera, cigs.meshes);
+function isMoveable(_object) {
+    if(_object.name.indexOf("cig") == 0){
+        return true
+    }
+    return false
+}
+
+function findObject(e, objects) {
+    var entity = findNearestIntersectingObject(e.clientX,e.clientY,camera, objects.meshes);
+    if(!entity) {
+        console.log("No intersection found with ", objects.name)
+        return
+    }
     var pos = entity.point;
-    if(pos && entity.object.geometry instanceof THREE.BoxGeometry){
+
+    console.log("entity: ", entity)
+    var isMove = isMoveable(entity.object)
+    console.log(entity.object.name, "is moveable: ",isMove)
+    if(pos && isMove) {
         constraintDown = true;
         // Set marker on contact point
         setClickMarker(pos.x,pos.y,pos.z,scene);
@@ -214,11 +242,16 @@ function onMouseDown(e){
         // Set the movement plane
         setScreenPerpCenter(pos,camera);
 
-        var idx = cigs.meshes.indexOf(entity.object);
+        var idx = objects.meshes.indexOf(entity.object);
         if(idx !== -1){
-            addMouseConstraint(pos.x,pos.y,pos.z,cigs.bodies[idx]);
+            addMouseConstraint(pos.x,pos.y,pos.z,objects.bodies[idx]);
         }
     }
+}
+
+function onMouseDown(e){
+    findObject(e, cigs)
+    findObject(e, cigBoxes)
 }
 
 // This function creates a virtual movement plane for the mouseJoint to move in
@@ -289,17 +322,23 @@ function getRayCasterFromScreenCoord (screenX, screenY, camera, projector) {
     return projector.pickingRay(mouse3D, camera);
 }
 
+function removeCig(index) {
+    var selectedObject = scene.getObjectByName(cigs.meshes[index].name);
+    scene.remove(selectedObject)
+    world.remove(cigs.bodies[index])
+    cigs.bodies.splice(index, 1)
+    cigs.meshes.splice(index, 1)
+}
+
+
 function resetCigs(){
     for(var i=0; i<cigs.meshes.length; i++) {
-        var selectedObject = scene.getObjectByName(cigs.meshes[i].name);
-        scene.remove(selectedObject)
+        removeCig(i)
     }
-    for(var i=0; i<cigs.bodies.length; i++) {
-        world.remove(cigs.bodies[i])
-    }
+
     cigs.meshes = []
     cigs.bodies = []
-    gen_cig_boxes()
+    gen_cig_bodies()
     gen_cig_meshes()
 }
 
@@ -311,13 +350,13 @@ function onWindowResize() {
     renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
-var day_length = 1000*10
+var day_length = 1000*60
 var timer = Date.now()+day_length
 function animate() {
     requestAnimationFrame( animate );
     updatePhysics();
     if(checkForWin()) {
-        resetCigs()
+        //resetCigs()
         win_box.innerHTML = '<span style="font-size:20px;font-color:green">boxes complete: '+wins.length+'</span><br>'
     }
     var time_left = 60.0*60.0*8.0*(timer-Date.now())/day_length
@@ -326,7 +365,8 @@ function animate() {
         var seconds = sprintf("%02d", time_left % 60)
         var minutes = sprintf("%02d", Math.floor(time_left/60) % 60)
         var hours = sprintf("%02d", Math.floor(time_left/3600))
-        timer_box.innerHTML = '<span style="font-size:40px">Day left: '+hours+":"+minutes+":"+seconds+'</span>'
+        timer_box.innerHTML = '<span style="font-size:20px">Day left: '+hours+":"+minutes+":"+seconds+'</span>'
+        instruction_box.style.display = "none"
     }
     else if(started) {
         var name = getName()
@@ -337,18 +377,22 @@ function animate() {
 }
 
 function getScoreboard() {
-    window.location = window.origin+"/scoreboard"
+    //window.location = window.origin+"/scoreboard"
 }
 
 function updatePhysics(){
     world.step(dt);
-    for(var i=0; i !== cigs.meshes.length; i++){
-        if(cigs.bodies[i] == undefined) {
-            continue
+    for(var obj_i in allObjects) {
+        var objectsList = allObjects[obj_i]
+        for(var i=0; i !== objectsList.meshes.length; i++){
+            if(objectsList.bodies[i] == undefined) {
+                continue
+            }
+            objectsList.meshes[i].position.copy(objectsList.bodies[i].position);
+            objectsList.meshes[i].quaternion.copy(objectsList.bodies[i].quaternion);
         }
-        cigs.meshes[i].position.copy(cigs.bodies[i].position);
-        cigs.meshes[i].quaternion.copy(cigs.bodies[i].quaternion);
     }
+
 }
 
 function checkForWin() {
@@ -358,26 +402,30 @@ function checkForWin() {
 
     var in_count = 0
     for(var i=0; i !== cigs.meshes.length; i++){
-        if(cigs.bodies[i] == undefined) {
+        if(cigs.meshes[i] == undefined) {
             continue
         }
-        var conds = [min(limits[0]) <= cigs.bodies[i].position.x,
-                     cigs.bodies[i].position.x <= max(limits[0]),
-                     min(limits[1]) <= cigs.bodies[i].position.y,
-                     cigs.bodies[i].position.y <= max(limits[1]),
-                     min(limits[2]) <= cigs.bodies[i].position.z,
-                     cigs.bodies[i].position.z<= max(limits[2])]
+        var conds = [min(limits[0]) <= cigs.meshes[i].position.x,
+                     cigs.meshes[i].position.x <= max(limits[0]),
+                     min(limits[1]) <= cigs.meshes[i].position.y,
+                     cigs.meshes[i].position.y <= max(limits[1]),
+                     min(limits[2]) <= cigs.meshes[i].position.z,
+                     cigs.meshes[i].position.z<= max(limits[2])]
         if( conds[0] && conds[1] && conds[2] && conds[3] && conds[4] && conds[5]) {
+            removeCig(i)
+            wins.push(i)
+            return true
             in_count += 1
         }
     }
 
+    /*
     score_box.innerHTML = '<span style="font-size:40px">Cigarettes in box: '+in_count+'</span>'
     if(in_count >= win_condition){
         wins.push(timer)
         return true
     }
-    return false
+    return false*/
 }
 
 function render() {
@@ -394,7 +442,8 @@ function initCannon(){
     world.broadphase = new CANNON.NaiveBroadphase();
 
     // Create boxes
-    gen_cig_boxes()
+    gen_cig_bodies()
+    gen_cig_box_bodies()
 
     // Create a plane
     var groundShape = new CANNON.Plane();
@@ -438,6 +487,7 @@ function addMouseConstraint(x,y,z,body) {
 function moveJointToPoint(x,y,z) {
     // Move the joint body to a new position
     jointBody.position.set(x,y,z);
+    console.log("updating jointBody: ", jointBody)
     mouseConstraint.update();
 }
 
