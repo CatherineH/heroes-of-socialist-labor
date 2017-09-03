@@ -7,6 +7,7 @@ without the express permission of GradientOne Inc.
 """
 
 # external imports
+import operator
 from json import dumps
 
 import jinja2
@@ -31,7 +32,8 @@ class ScoreboardModel(db.Model):
     """For datastore kinds with fixed schemas"""
     name = db.StringProperty()
     num_boxes = db.IntegerProperty()
-
+    best_boxes = db.IntegerProperty()
+    occupation = db.StringProperty()
 
 def is_chrome_request(request):
     ua_hdr = request.headers['User-Agent']
@@ -117,21 +119,33 @@ class ScoreboardPage(PageHandler):
     page = "scoreboard.html"
 
 
-
 class Scoreboard(webapp2.RequestHandler):
     def post(self):
         logging.info(self.request)
         name = self.request.get("name")
         num_boxes = self.request.get("num_boxes")
+        key = str(self.request.get("key"))
+        occupation = self.request.get("occupation")
+        # first, check that the entry doesn't exist yet
         num_boxes = int(num_boxes)
-        sbm = ScoreboardModel(key_name=name, name=name, num_boxes=num_boxes)
-        sbm.put()
+        result = self.get_score_entry(key)
+        if result:
+            if num_boxes > result.best_boxes:
+                result.best_boxes = num_boxes
+            result.num_boxes = num_boxes
+            result.put()
+        else:
+            sbm = ScoreboardModel(key_name=key, name=name, num_boxes=num_boxes, best_boxes=num_boxes, occupation=occupation)
+            sbm.put()
+
+    def get_score_entry(self, name):
+        key = db.Key.from_path("ScoreboardModel", name)
+        return db.get(key)
 
     def get(self):
-        name = self.request.get("name")
+        name = self.request.get("key")
         if name:
-            key = db.Key.from_path("ScoreboardModel", name)
-            mdo = db.get(key)
+            mdo = self.get_score_entry(name)
             self.response.write(dumps({"name": mdo.name, "num_boxes": mdo.num_boxes}))
         else:
             values = ScoreboardModel.all()
@@ -140,7 +154,8 @@ class Scoreboard(webapp2.RequestHandler):
                 self.response.write("[]")
             else:
                 values = values.fetch(limit=1000)
-                values = [{"name": v.name, "num_boxes": v.num_boxes} for v in values]
+                values = [{"name": v.name, "best_boxes": v.best_boxes, "occupation": v.occupation} for v in values]
+                values = sorted(values, key=lambda k: k['best_boxes'])
                 self.response.write(dumps(values))
 
 

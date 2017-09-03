@@ -16,6 +16,9 @@
     var name_content = document.getElementById('name_content')
     var occupation_content = document.getElementById('occupation_content')
     console.log(getName(), getOccupation(), getCookie("shown_intro"))
+    if(!getCookie("key")) {
+        document.cookie = "key="+getRandomInt(1000000, 9999999)
+    }
 
     if(getName() && getOccupation() && getCookie("shown_intro")){
         console.log("got everything")
